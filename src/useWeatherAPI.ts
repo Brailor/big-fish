@@ -1,39 +1,40 @@
 import { useState, useEffect } from 'react';
-
-interface Position {
-    coords: Coordinates;
-}
-
-interface Coordinates {
-    latitude: number;
-    longitude: number;
-}
+import { WeatherData, Position } from './types';
 
 const WEATHER_API_KEY ='bd444b596ba090889d3540022567adca';
 const IP_API_KEY = '0abad2cb6391374081a6cbdbb44ebaed';
 
 export default function useWeatherAPI() {
-    const [ weather, setWeather ] = useState({});
-    const [ errors, setErrors ] = useState<Array<object>>([]);
+    const [ weather, setWeather ] = useState<WeatherData>();
+    const [ errors, setErrors ] = useState<Array<string>>([]);
+    const [ isLoading, setLoading ] = useState(true);
+
+    useEffect(() => {
+        if('geolocation' in navigator) {
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            };
+            
+            navigator.geolocation.getCurrentPosition(success, error, options);
+        } else {
+            // do the fallback function
+            getGeoCoordsFromIP()
+                .then(({ latitude, longitude }) => fetchWeatherData(latitude, longitude))
+                .catch(handleError);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     function fetchWeatherData(lat: number, lon: number) {
-        return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&APPID=${WEATHER_API_KEY}`)
+        return fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&APPID=${WEATHER_API_KEY}`)
             .then(response => response.json())
-            .then(data => setWeather(data))
+            .then(data => {
+                setWeather(data);
+                setLoading(false);
+            })
             .catch(handleError);
-    }
-
-    // fallback function if everything fails then just call the weather api
-    // with a hardcoded value
-    function handleError() {
-        return fetch(`https://api.openweathermap.org/data/2.5/weather?q=Budapest&APPID=${WEATHER_API_KEY}`)
-            .then(response => response.json())
-            .then(data => setWeather(data))
-            .catch(error => {
-                console.error(error);
-
-                setErrors(errors => [...errors, error])
-            });
     }
 
     function success(pos: Position) {
@@ -61,25 +62,24 @@ export default function useWeatherAPI() {
         }
     }
 
-    useEffect(() => {
-        if('geolocation' in navigator) {
-            const options = {
-                enableHighAccuracy: true,
-                timeout: 5000,
-                maximumAge: 0
-            };
-            navigator.geolocation.getCurrentPosition(success, error, options);
-        } else {
-            // do the fallback method
-            getGeoCoordsFromIP()
-                .then(({ latitude, longitude }) => fetchWeatherData(latitude, longitude))
-                .catch(handleError)
-        }
-    }, [])
+    // fallback function if everything fails, then just call the weather api
+    // with a hardcoded value
+    function handleError() {
+        return fetch(`https://api.openweathermap.org/data/2.5/weather?q=Budapest&units=metric&&APPID=${WEATHER_API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+                setWeather(data);
+                setLoading(false);
+            })
+            .catch(error => {
+                setErrors(errors => [...errors, error]);
+            });
+    }
 
   return {
       data: weather,
-      errors
+      errors,
+      isLoading
   }
 }
 

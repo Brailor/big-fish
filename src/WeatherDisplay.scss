@@ -1,0 +1,35 @@
+.weather-content {
+  width: 80%;
+
+  .weather-block {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    .main-temperature {
+      font-size: calc(35px + 2vmin);
+    }
+}
+
+
+.weather-section-details {
+  width: 100%;
+  text-align: left;
+  margin: 25px;
+
+  .details-block {
+    background: #97929275;
+    border-radius: 20px;
+    padding: 5px 50px;
+
+    & > span {
+      display: flex;
+      justify-content: space-between;
+
+      & > h4 {
+        display: inline;
+      }
+    }
+  }
+ }
+}
