@@ -13,8 +13,8 @@ export default function useWeatherAPI() {
         if('geolocation' in navigator) {
             const options = {
                 enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
+                timeout: 5000,
+                maximumAge: 1000 * 120
             };
             
             navigator.geolocation.getCurrentPosition(success, error, options);
